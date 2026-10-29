@@ -1,1 +1,36 @@
+name: Bouw PaintMasterPro.exe
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pakketten installeren
+        run: pip install -r requirements.txt
+      - name: Icoon maken
+        run: python make_icon.py
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - name: EXE bouwen
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name PaintMasterPro --icon assets/icon.ico --exclude-module PySide6.QtWebEngineCore --exclude-module PySide6.QtQml --exclude-module PySide6.Qt3DCore main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PaintMasterPro
+          path: dist/PaintMasterPro.exe
+      - name: Aan release hangen
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/PaintMasterPro.exe
 
